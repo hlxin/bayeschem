@@ -20,14 +20,3 @@ setup(cmdclass = {'build_ext': build_ext},
                                 libraries=["m","fftw3"])
                       ])
                                                                 
-
-# /opt/apps/gcc7_3/mvapich22_2/fftw/3.3.8/lib for cascades
-
-
-# for newriver
-#/opt/apps/gcc4_7/mvapich22_2/fftw/3.3.8/lib
-#/opt/apps/gcc4_7/mvapich22_1/fftw/3.3.4/lib/
-# /opt/apps/gcc4_7/mvapich22_1/fftw/3.3.4/lib/
-
-
-#/opt/apps/gcc6_1/mvapich22_2/fftw/3.3.4/
