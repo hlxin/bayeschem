@@ -7,7 +7,7 @@ The folder of each model contains two important python scripts and multiple txt 
 
 In order to speed up the MCMC sampling a cython function was compiled ("chemisorption.so") to calculate the hybridization energy contribution. You will need to recompile it using the setup.py. A python version of this function has also been included in each folder ("chemisorption_py.py") which will return the same hybridization energy but is slower and thus is mainly used if large sampling is not required. 
 
-** Steps to use this approach **
+**Steps to use this approach**
 * Compile the cython code of the chemisorption function.
 * Prepare the metal density of states and molecular (atomic) orbital DOS of adsorbates.
 * Modify model.py code to tailored valence adsorbate orbitals included in chemsorption
