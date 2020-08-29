@@ -1,6 +1,6 @@
 # Bayeschem
 
-## This repository contains the python scripts required to find parameters for the d-band theory of chemisorption using Bayesian optimization.
+## This repository contains the Python module required to find parameters for the d-band theory of chemisorption using Bayesian optimization.
 
 
 The folder of each model contains two important python scripts and multiple txt files. The txt files are how the surface DOS, adsorbate DOS and DFT adsorption energies are stored. These txt files are required to run the script "model.py", which is how the Newns-Anderson parameters are optimized. This script also shows all the parameters, priors and equations used for each model. Running the model.py with the required libraries will run the MCMC sampling to generate the parameters in a pickle file called "M.pickle". The script "Output.py" can then be run to get the parameters by averaging from the samples generated via MCMC, this script will also generate the model predicted adsorption energies in the text file "E_NA.txt".
