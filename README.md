@@ -1,4 +1,4 @@
-# Bayeschem
+# Bayeschem (under development)
 
 ## This repository contains the Python module required to find parameters for the d-band theory of chemisorption using Bayesian optimization.
 
