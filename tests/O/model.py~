@@ -1,0 +1,79 @@
+#!/usr/bin/env python
+
+from ase import io
+import numpy as np
+from scipy import integrate
+import pymc as pm
+from scipy.signal import hilbert
+import pickle, time, math
+from chemisorption import namodel
+from ase.db import connect
+
+# load in data
+db = connect('bayeschem.db')
+
+List = [row.label for row in db.select()]
+Vak2 = [row.vad for row in db.select()]
+f = [row.filling for row in db.select()]
+
+ergy = np.linspace(-15, 15, 3001)
+fermiindex=np.argmax(ergy>=0)
+
+dos_d = [row.data["dos_sub"] for row in db.select()]
+dos_ads = [row.data["dos_ads"] for row in db.select()] 
+de = [row.data['de'] for row in db.select()]
+
+print(List)
+print(Vak2)
+print(f)
+print(dos_d)
+print(dos_ads)
+print(de)
+
+dos_d = np.loadtxt('dos_d.txt')
+y1_data = np.loadtxt('dos_ads.txt')
+y2_data = np.load('E.npy')
+
+# priors
+Initeffadse = -5.0 #-5.0
+Initbeta = 2.1 #2.0
+Initdelta = 1.0 #1.0
+InitAlpha = 0.036 #.5
+InitEsp = -3.25 #-2.0
+
+effadse = pm.Normal('effadse', -5.0, 1, value=Initeffadse)
+beta = pm.Lognormal('beta', 2, 1, value=Initbeta)
+delta = pm.Lognormal('delta', 1, 0.25, value=Initdelta)
+alpha = pm.Uniform('alpha', 0, 1.0, value=InitAlpha)
+Esp = pm.Normal('Esp', -3.25, 1, value=InitEsp)
+
+var_1 = pm.InverseGamma('var_1', 2.0, 0.05, value=0.05)
+var_2 = pm.InverseGamma('var_2', 2.0, 0.1, value=0.1)
+
+a = len(ergy)
+@pm.stochastic(observed=True)
+def custom_stochastic(effadse=effadse, beta=beta, delta=delta,
+                      alpha=alpha, Esp=Esp, 
+                      var_1=var_1, var_2=var_2,value=y1_data):
+    DATA = []
+    logp1 = 0
+    logp2 = 0
+    for i in range(len(List)):
+        Vak2_d = Vak2_d0[i] * beta
+        wdos = np.pi * Vak2_d * dos_d[i] + delta
+        wdos_ = np.array([delta for k in range(0, len(ergy))])
+        ergy_NA, dos_NA, na = namodel(effadse, wdos, wdos_,
+                                            delta, ergy)
+        dos_NA = dos_NA/integrate.cumtrapz(dos_NA, ergy, axis=0)[-1]
+
+        BE = Esp + (ergy_NA + 2 * (na + f[i])* alpha * Vak2_d)*3
+        logp1 += -2*math.log(var_1) * len(ergy) - np.sum((dos_NA-value[i])**2 / (2*var_1))
+        logp2 += -2*math.log(var_2) - (BE - y2_data[i])**2 / (2*var_2)
+    return logp1 + a * logp2
+
+M = pm.MCMC([effadse,beta,delta,alpha,Esp,
+             var_1,var_2,custom_stochastic],
+            db='pickle', dbname='M.pickle')
+
+M.sample(iter=200000, burn=0, thin=1)
+M.db.close()
