@@ -12,8 +12,8 @@ ctypedef double (*trapz_ptr)(double[:] y, double[:] x, np.intp_t f_ind)
 cdef extern from "hilbert.h":
     void hilbt_imag(double *ht_output, int N, double *ht_input)
 
-@cython.boundscheck(False) # turn off bound-checking for entire function                                              
-@cython.wraparound(False) # turn off negative index wrapping for entire function                                       
+@cython.boundscheck(False) 
+@cython.wraparound(False) 
 @cython.cdivision(True)
 @cython.nonecheck(False)
 cdef double trapz_1d(double[:] y, double[:] x, np.intp_t f_ind):
@@ -41,9 +41,7 @@ cpdef namodel(double effadse,
     cdef np.intp_t j
     cdef np.intp_t k
 
-    
     cdef double[:] htwdos = np.empty(N_ergy)
-#    cdef double[:] htwdos_ = np.empty(N_ergy)
 
     cdef double* htwdos_p = &htwdos[0]
     cdef double* wdos_p = &wdos[0]
@@ -64,10 +62,8 @@ cpdef namodel(double effadse,
         diff_e_ = ergy[j] - effadse
         diff_e_lorz = ergy[j] - effadse
 
-# get the lorentzian
         lorentzian[j] = (1/M_PI) * (delta)/(diff_e_lorz*diff_e_lorz + delta*delta)
 
-# multiple the lorenzian * e 
         dos_ads[j] = wdos[j]/(diff_e*diff_e + wdos[j]*wdos[j])/M_PI
 
         integrand[j] = atan(wdos[j]/diff_e)
@@ -80,7 +76,7 @@ cpdef namodel(double effadse,
 
     cdef trapz_ptr int_fcn = &trapz_1d
 
-    na = int_fcn(lorentzian, ergy, fermi) # integrate of lorenzian de up to fermi level 
+    na = int_fcn(lorentzian, ergy, fermi) 
     integ = int_fcn(integrand, ergy, fermi)/M_PI
     integ_ = int_fcn(integrand_, ergy, fermi)/M_PI
     energy_NA = 2*(integ - integ_)
