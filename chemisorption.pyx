@@ -32,14 +32,19 @@ cdef double trapz_1d(double[:] y, double[:] x, np.intp_t f_ind):
 @cython.nonecheck(False)
 cpdef namodel(double effadse,
               double[:] wdos,
+              double[:] wdos_,
               double delta, # the sp constant
               np.ndarray[np.float64_t, ndim=1] ergy):
 
     cdef np.intp_t fermi = np.argmax(ergy>=0)
     cdef np.intp_t N_ergy = ergy.shape[0]
     cdef np.intp_t j
+    cdef np.intp_t k
 
+    
     cdef double[:] htwdos = np.empty(N_ergy)
+#    cdef double[:] htwdos_ = np.empty(N_ergy)
+
     cdef double* htwdos_p = &htwdos[0]
     cdef double* wdos_p = &wdos[0]
 
@@ -47,33 +52,37 @@ cpdef namodel(double effadse,
                                          # taking its imaginary components
 
     cdef double[:] lorentzian = np.empty(N_ergy)
-    cdef double[:] Avg_Lorz = np.empty(N_ergy)
     cdef double[:] dos_ads = np.empty(N_ergy)
     cdef double[:] integrand = np.empty(N_ergy)
+    cdef double[:] integrand_ = np.empty(N_ergy)
     cdef double diff_e 
+    cdef double diff_e_ 
     cdef double diff_e_lorz
 
     for j in range(N_ergy):
         diff_e = ergy[j] - effadse - htwdos[j]
+        diff_e_ = ergy[j] - effadse
         diff_e_lorz = ergy[j] - effadse
 
 # get the lorentzian
         lorentzian[j] = (1/M_PI) * (delta)/(diff_e_lorz*diff_e_lorz + delta*delta)
 
 # multiple the lorenzian * e 
-        Avg_Lorz[j] = lorentzian[j] * ergy[j]
         dos_ads[j] = wdos[j]/(diff_e*diff_e + wdos[j]*wdos[j])/M_PI
-        integrand[j] = atan(wdos[j]/diff_e)
 
+        integrand[j] = atan(wdos[j]/diff_e)
+        integrand_[j] = atan(wdos_[j]/diff_e_)
         if integrand[j] > 0:
             integrand[j] = integrand[j] - M_PI
 
+        if integrand_[j] > 0:
+            integrand_[j] = integrand_[j] - M_PI
 
     cdef trapz_ptr int_fcn = &trapz_1d
 
     na = int_fcn(lorentzian, ergy, fermi) # integrate of lorenzian de up to fermi level 
-    Avg_val = int_fcn(Avg_Lorz, ergy, fermi) # integration of lorz * e de up to fermi level
     integ = int_fcn(integrand, ergy, fermi)/M_PI
-    energy_NA = 2*(integ - Avg_val)
+    integ_ = int_fcn(integrand_, ergy, fermi)/M_PI
+    energy_NA = 2*(integ - integ_)
 
     return energy_NA, np.asarray(dos_ads), na
