@@ -57,7 +57,7 @@ def custom_stochastic(eps_a = eps_a, beta = beta, delta_0 = delta_0,
                       alpha = alpha, dE_0 = dE_0, var_1 = var_1, var_2 = var_2,
                       value = dos_adss):
 
-    logp_de = 0
+    logp_dE = 0
     logp_ados = 0
     for count in range(len(labels)):
         vad2 = vad2s[count]
